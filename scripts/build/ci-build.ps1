@@ -31,7 +31,8 @@ param (
     [string]$repoxPassword = $env:ARTIFACTORY_DEPLOY_PASSWORD,
 
     # Others
-    [string]$appDataPath = $env:APPDATA
+    [string]$appDataPath = $env:APPDATA,
+    [string]$repoxUrl = 'https://repox.sonarsource.com/api/nuget/sonarsource-nuget-qa'
 )
 
 Set-StrictMode -version 2.0
@@ -159,7 +160,7 @@ function Initialize-NuGetConfig() {
 
     $nugetExe = Get-NuGetPath
     Write-Debug "Adding repox source to NuGet config"
-    Exec { & $nugetExe Sources Add -Name "repox" -Source "https://repox.sonarsource.com/api/nuget/sonarsource-nuget-qa" }
+    Exec { & $nugetExe Sources Add -Name "repox" -Source "${repoxUrl}" }
 
     Write-Debug "Adding repox API key to NuGet config"
     Write-Host "repoxUserName:repoxPassword = ${repoxUserName}:${repoxPassword}"
