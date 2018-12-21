@@ -154,6 +154,8 @@ function Invoke-SonarEndAnalysis() {
 function Initialize-NuGetConfig() {
     Write-Header "Setting up nuget.config"
 
+    Write-Host "appDataPath = <${appDataPath}>"
+
     $nugetFile = "${appDataPath}\NuGet\NuGet.Config"
     Write-Debug "Deleting '${nugetFile}'"
     Remove-Item $nugetFile
