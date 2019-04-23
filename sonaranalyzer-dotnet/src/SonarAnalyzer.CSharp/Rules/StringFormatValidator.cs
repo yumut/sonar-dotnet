@@ -116,9 +116,12 @@ namespace SonarAnalyzer.Rules.CSharp
 
             var formatArgumentIndex = methodSymbol.Parameters[0].IsType(KnownType.System_IFormatProvider)
                 ? 1 : 0;
-            var formatStringExpression = invocation.ArgumentList.Arguments[formatArgumentIndex];
-
-            var constValue = analysisContext.SemanticModel.GetConstantValue(formatStringExpression.Expression);
+            if (invocation.ArgumentList.Arguments.Count <= formatArgumentIndex ||
+                !(invocation.ArgumentList.Arguments[formatArgumentIndex] is ArgumentSyntax formatStringExpression) ||
+                !(analysisContext.SemanticModel.GetConstantValue(formatStringExpression.Expression) is Optional<object> constValue))
+            {
+                return;
+            }
             if (!constValue.HasValue)
             {
                 // can't check non-constant format strings
@@ -278,6 +281,7 @@ namespace SonarAnalyzer.Rules.CSharp
             var formatArguments = argumentList.Arguments
                 .Skip(formatArgumentIndex + 1)
                 .Select(arg => FormatStringArgument.Create(arg.Expression, semanticModel))
+                .WhereNotNull()
                 .ToList();
             var maxFormatItemIndex = formatStringItems.Max(item => (int?)item.Index);
 
@@ -433,7 +437,15 @@ namespace SonarAnalyzer.Rules.CSharp
 
             public static FormatStringArgument Create(ExpressionSyntax expression, SemanticModel semanticModel)
             {
+                if (expression == null)
+                {
+                    return null;
+                }
                 var type = semanticModel.GetTypeInfo(expression).Type;
+                if (type == null)
+                {
+                    return null;
+                }
                 var arraySize = -1;
                 if (type.Is(TypeKind.Array))
                 {
